@@ -115,6 +115,7 @@ GOTO:EOF
 :clearing
 rd /Q /S "%~dp0batch"
 del "%~dpn1.a.ini" "%~dpn1.v.ini" "%~dpn1.wav" "%~dpn1.rev.wav" /Q
+GOTO:EOF
 
 :clearing2
 rd /Q /S "%~dp0batch"
