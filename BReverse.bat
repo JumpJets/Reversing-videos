@@ -1,4 +1,5 @@
 @echo on
+REM https://github.com/JumpJets/Reversing-videos/tree/master
 chcp 65001
 set "local=%~dp0"
 set /a x=1
@@ -10,7 +11,7 @@ setlocal EnableDelayedExpansion
 if %1=="" goto :ArgumentEnter
 md "%~dp1batch"
 ffmpeg -i %1 -an -f image2 "%~dp1batch\out_%%06d.png"
-CD /D "%~dp1batch"
+cd /D "%~dp1batch"
 for %%A in (*) do set /a cnt+=1
 set rev=%cnt%
 echo File count = %cnt%
@@ -29,10 +30,10 @@ cd ..
 
 set /p "continue=Compile all image sequences again in reverse file? (yes - leave blank): "
 if "%continue%" NEQ "" GOTO:EOF
-if %1=="" GOTO ArgumentEnter2
+if %1=="" goto ArgumentEnter2
 ffprobe -loglevel 16 -print_format ini -select_streams a -show_streams "%~1" > "%~n1.a.ini"
-FOR /F "eol=; eol=[ tokens=1,2* delims==" %%i in ('findstr /b /l /i codec_name= %~n1.a.ini') DO set CODECNAMEA=%%~j
-IF "%CODECNAMEA%" == "" (
+for /F "eol=; eol=[ tokens=1,2* delims==" %%i in ('findstr /b /l /i codec_name= %~n1.a.ini') do set codecnamea=%%~j
+if "%codecnamea%" == "" (
 echo "Video doesn't content audio stream(-s)"
 set noa=1
 goto noaudio
@@ -42,18 +43,18 @@ sox -V "%~dpn1.wav" "%~dpn1.rev.wav" reverse
 
 :noaudio
 ffprobe -loglevel 16 -print_format ini -select_streams v -show_streams "%~1" > "%~n1.v.ini"
-FOR /F "eol=; eol=[ tokens=1,2* delims==" %%i in ('findstr /b /l /i codec_name= %~n1.v.ini') DO set CODECNAMEV=%%~j
+for /F "eol=; eol=[ tokens=1,2* delims==" %%i in ('findstr /b /l /i codec_name= %~n1.v.ini') do set codecnamev=%%~j
 
 cd batch
-IF "%noa%" == "0" ffmpeg -i out2_%%06d.png -vcodec %CODECNAMEV% -i "%~dpn1.rev.wav" -strict -2 -acodec %CODECNAMEA% "..\%~n1.rev%~x1"
-IF "%noa%" == "1" ffmpeg -i out2_%%06d.png -vcodec %CODECNAMEV% "..\%~n1.rev%~x1"
+if "%noa%" == "0" ffmpeg -i out2_%%06d.png -vcodec %codecnamev% -i "%~dpn1.rev.wav" -strict -2 -acodec %codecnamea% "..\%~n1.rev%~x1"
+if "%noa%" == "1" ffmpeg -i out2_%%06d.png -vcodec %codecnamev% "..\%~n1.rev%~x1"
 if %ERRORLEVEL% == 0 goto noerr
 :repeat
 set /p "manualcodeca=If problem with audio codec, type another (or leave blank for write without audio or same): "
-set /p "manualcodecv=If in log problem with video codec, type another here (or leave blank for use: %CODECNAMEV%): "
-IF "%manualcodecv%" == "" set "manualcodecv=%CODECNAMEV%"
-IF "%manualcodeca%" NEQ "" ffmpeg -i out2_%%06d.png -vcodec %manualcodecv% -i "%~dpn1.rev.wav" -strict -2 -acodec %manualcodeca% "..\%~n1.rev%~x1"
-IF "%manualcodeca%" == "" ffmpeg -i out2_%%06d.png -vcodec %manualcodecv% "..\%~n1.rev%~x1"
+set /p "manualcodecv=If in log problem with video codec, type another here (or leave blank for use: %codecnamev%): "
+if "%manualcodecv%" == "" set "manualcodecv=%codecnamev%"
+if "%manualcodeca%" NEQ "" ffmpeg -i out2_%%06d.png -vcodec %manualcodecv% -i "%~dpn1.rev.wav" -strict -2 -acodec %manualcodeca% "..\%~n1.rev%~x1"
+if "%manualcodeca%" == "" ffmpeg -i out2_%%06d.png -vcodec %manualcodecv% "..\%~n1.rev%~x1"
 if %ERRORLEVEL% NEQ 0 (
 set /p "continue=Try different codec? (leave blank to repeat): " 
 if "%continue%" NEQ "" goto repeat
@@ -69,7 +70,7 @@ GOTO:EOF
 set /p FilePath=Enter path to file to proceed: 
 md "%~dp0batch"
 ffmpeg -i "%FilePath%" -an -f image2 "%~dp0\batch\out_%%06d.png"
-CD /D "%~dp0batch"
+cd /D "%~dp0batch"
 for %%A in (*) do set /a cnt+=1
 set rev=%cnt%
 echo File count = %cnt%
@@ -78,8 +79,8 @@ goto :while
 
 :ArgumentEnter2
 ffprobe -loglevel 16 -print_format ini -select_streams a -show_streams "%FilePath%" > "temp.a.ini"
-FOR /F "eol=; eol=[ tokens=1,2* delims==" %%i in ('findstr /b /l /i codec_name= temp.a.ini') DO set CODECNAMEA=%%~j
-IF "%CODECNAMEA%" == "" (
+for /F "eol=; eol=[ tokens=1,2* delims==" %%i in ('findstr /b /l /i codec_name= temp.a.ini') do set codecnamea=%%~j
+if "%codecnamea%" == "" (
 echo "Video doesn't content audio streams"
 set noa=1
 goto noaudio2
@@ -89,18 +90,18 @@ sox -V "%local%temp.wav" "%local%temp.rev.wav" reverse
 
 :noaudio2
 ffprobe -loglevel 16 -print_format ini -select_streams v -show_streams "%FilePath%" > "temp.v.ini"
-FOR /F "eol=; eol=[ tokens=1,2* delims==" %%i in ('findstr /b /l /i codec_name= temp.v.ini') DO set CODECNAMEV=%%~j
+for /F "eol=; eol=[ tokens=1,2* delims==" %%i in ('findstr /b /l /i codec_name= temp.v.ini') DO set codecnamev=%%~j
 
 cd batch
-IF "%noa%" == "0" ffmpeg -i out2_%%06d.png -vcodec %CODECNAMEV% -i "..\temp.rev.wav" -strict -2 -acodec %CODECNAMEA% "%FilePath:~0,-4%.rev%FilePath:~-4%"
-IF "%noa%" == "1" ffmpeg -i out2_%%06d.png -vcodec %CODECNAMEV% "%FilePath:~0,-4%.rev%FilePath:~-4%"
+if "%noa%" == "0" ffmpeg -i out2_%%06d.png -vcodec %codecnamev% -i "..\temp.rev.wav" -strict -2 -acodec %codecnamea% "%FilePath:~0,-4%.rev%FilePath:~-4%"
+if "%noa%" == "1" ffmpeg -i out2_%%06d.png -vcodec %codecnamev% "%FilePath:~0,-4%.rev%FilePath:~-4%"
 if %ERRORLEVEL% == 0 goto noerr2
 :repeat2
 set /p "manualcodeca=If problem with audio codec, type another (or leave blank for write without audio or same): "
-set /p "manualcodecv=If in log problem with video codec, type another here (or leave blank for use: %CODECNAMEV%): "
-IF "%manualcodecv%" == "" set "manualcodecv=%CODECNAMEV%"
-IF "%manualcodeca%" NEQ "" ffmpeg -i out2_%%06d.png -vcodec %manualcodecv% -i "..\temp.rev.wav" -strict -2 -acodec %manualcodeca% "%FilePath:~0,-4%.rev%FilePath:~-4%"
-IF "%manualcodeca%" == "" ffmpeg -i out2_%%06d.png -vcodec %manualcodecv% "%FilePath:~0,-4%.rev!FilePath:~-4%"
+set /p "manualcodecv=If in log problem with video codec, type another here (or leave blank for use: %codecnamev%): "
+if "%manualcodecv%" == "" set "manualcodecv=%codecnamev%"
+if "%manualcodeca%" NEQ "" ffmpeg -i out2_%%06d.png -vcodec %manualcodecv% -i "..\temp.rev.wav" -strict -2 -acodec %manualcodeca% "%FilePath:~0,-4%.rev%FilePath:~-4%"
+if "%manualcodeca%" == "" ffmpeg -i out2_%%06d.png -vcodec %manualcodecv% "%FilePath:~0,-4%.rev!FilePath:~-4%"
 if %ERRORLEVEL% NEQ 0 (
 set /p "continue=Try different codec? (leave blank to repeat): " 
 if "%continue%" NEQ "" goto repeat2
