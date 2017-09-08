@@ -1,4 +1,6 @@
 # Reversing-videos
+[![Join the chat at https://gitter.im/JumpJets/Reversing-videos](https://badges.gitter.im/JumpJets/Reversing-videos.svg)](https://gitter.im/JumpJets/Reversing-videos?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 Reverse video and audio stream *(optional)*.
 
 Required [ffmpeg](https://ffmpeg.org/download.html)
